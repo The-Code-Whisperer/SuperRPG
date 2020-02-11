@@ -8,13 +8,19 @@ var player = {
     x: 5,
     y: 20
 };
+player.speed = 4;
+player.fps = 16;
+player.animationUpdateTime = 1000 / player.fps;
+var lastTime = 0;
+var timeSinceLastFrameSwap = 0;
 
 function init() {
     // Initialise the game!
     link.src = 'images/link.png';
-    zoom(1.6)
+    zoom(2)
     player.sequence = [3, 4, 5, 6, 5, 4, 3, 2, 1, 0, 1, 2];
     player.sequenceIdx = 0;
+    lastTime = window.performance.now(); // store an initial time
 
 }
 
@@ -25,23 +31,38 @@ function zoom(s) {
 
 function main() {
     // Here's where we handle all the input, logic and drawing to the screen per frame.
+    var now = window.performance.now(); // the time in ms on each loop
+    var elapsed = (now - lastTime); // how many ms since the last time the loop ran
+    timeSinceLastFrameSwap += elapsed;
+
+    // has enough time passed since the last frame was displayed?
+    if (timeSinceLastFrameSwap > player.animationUpdateTime) {
+        // enough time has passed. display the next frame.
+        if (player.sequenceIdx < player.sequence.length - 1)
+            player.sequenceIdx++;
+        else
+            player.sequenceIdx = 0;
+        // reset the counter
+        timeSinceLastFrameSwap = 0;
+    }
 
     ctx.clearRect(0, 0, 256, 224);
-    //var spritePos = player.sequence[player.sequenceIdx] * 16;
-    ctx.drawImage(link, 0, 0, 32, 50, player.x, player.y, 16, 25);
-    if (player.sequenceIdx < player.sequence.length - 1)
-        player.sequenceIdx++;
-    else
-        player.sequenceIdx = 0;
+    var spritePos = player.sequence[player.sequenceIdx] * 46;
+
+    ctx.drawImage(link, spritePos, 0, 36, 51, player.x, player.y, 18, 28);
 
     if (key[2])
-        player.y -= 4;
+        player.y -= player.speed;
     if (key[3])
-        player.y += 4;
+        player.y += player.speed;
     if (key[0])
-        player.x -= 4;
+        player.x -= player.speed;
     if (key[1])
-        player.x += 4;
+        player.x += player.speed;
+
+
+
+    lastTime = now;
 
     // call itself by requesting the next animation frame, and so begin the endless loop
     requestAnimationFrame(main);
